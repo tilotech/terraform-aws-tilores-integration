@@ -4,12 +4,11 @@ locals {
   snowflake_api_policy_statement = !var.snowflake ? null : {
     Effect    = "Allow"
     Principal = {
-      AWS = local.use_snowflake_internal_role ? aws_iam_role.snowflake_api_access[0].arn : aws_iam_role.snowflake_api_access_external[0].arn
+      AWS = "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/${local.use_snowflake_internal_role ? aws_iam_role.snowflake_api_access[0].name : aws_iam_role.snowflake_api_access_external[0].name}/snowflake"
     },
     Action   = "execute-api:Invoke",
-    Resource = format("%s/%s/POST%s/*",
+    Resource = format("%s/default/POST%s/*",
       aws_api_gateway_rest_api.integration.execution_arn,
-      aws_api_gateway_stage.default.stage_name,
       aws_api_gateway_resource.snowflake[0].path
     )
   }
@@ -108,4 +107,3 @@ module "lambda_snowflake_ingest" {
   }
   create_current_version_allowed_triggers = false
 }
-

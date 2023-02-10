@@ -5,18 +5,28 @@ resource "aws_api_gateway_rest_api" "integration" {
   }
 }
 
+// TODO: check why changing resource policy didn't redeploy
 resource "aws_api_gateway_deployment" "default" {
   rest_api_id = aws_api_gateway_rest_api.integration.id
 
   triggers = {
-    // TODO: Add any file that might affect the API
-    main      = filesha1("${path.module}/main.tf"),
-    snowflake = filesha1("${path.module}/snowflake_api.tf")
+    resourceChange = sha1(jsonencode([
+      var.snowflake_iam_user_arn,
+      var.snowflake_external_id
+    ]))
+    mainFileChange      = filesha1("${path.module}/main.tf")
+    snowflakeFileChange = filesha1("${path.module}/snowflake_api.tf")
   }
 
   lifecycle {
     create_before_destroy = true
   }
+
+  depends_on = [
+    // TODO: add all resources of the same type
+    aws_api_gateway_integration_response.snowflake_ingest,
+    aws_api_gateway_rest_api_policy.default
+  ]
 }
 
 resource "aws_api_gateway_stage" "default" {
@@ -42,4 +52,9 @@ resource "aws_api_gateway_rest_api_policy" "default" {
     Version   = "2012-10-17",
     Statement = local.api_policy_statements
   })
+
+  depends_on = [
+    aws_iam_role.snowflake_api_access[0],
+    aws_iam_role.snowflake_api_access_external[0]
+  ]
 }

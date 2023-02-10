@@ -33,9 +33,12 @@ resource "aws_api_gateway_method_response" "snowflake_ingest_post" {
   response_models = {
     "application/json" : "Empty"
   }
+
+  depends_on = [
+    aws_api_gateway_method.snowflake_ingest_post
+  ]
 }
 
-// TODO: add request/response mapping
 resource "aws_api_gateway_integration" "snowflake_ingest" {
   count = var.snowflake ? 1 : 0
 
@@ -56,15 +59,17 @@ EOF
   }
 }
 
+// TODO: add response mapping
 resource "aws_api_gateway_integration_response" "snowflake_ingest" {
   count = var.snowflake ? 1 : 0
+
+  http_method = aws_api_gateway_method.snowflake_ingest_post[0].http_method
+  resource_id = aws_api_gateway_resource.snowflake_ingest[0].id
+  rest_api_id = aws_api_gateway_rest_api.integration.id
+  status_code = "200"
 
   depends_on = [
     aws_api_gateway_integration.snowflake_ingest[0],
     aws_api_gateway_method_response.snowflake_ingest_post[0],
   ]
-  http_method = aws_api_gateway_method.snowflake_ingest_post[0].http_method
-  resource_id = aws_api_gateway_resource.snowflake_ingest[0].id
-  rest_api_id = aws_api_gateway_rest_api.integration.id
-  status_code = "200"
 }
