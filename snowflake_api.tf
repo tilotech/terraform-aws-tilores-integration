@@ -1,3 +1,17 @@
+locals {
+  snowflake_api_policy_statement = !var.snowflake ? null : {
+    Effect    = "Allow"
+    Principal = {
+      AWS = "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/${local.use_snowflake_internal_role ? aws_iam_role.snowflake_api_access[0].name : aws_iam_role.snowflake_api_access_external[0].name}/snowflake"
+    },
+    Action   = "execute-api:Invoke",
+    Resource = format("%s/default/POST%s/*",
+      aws_api_gateway_rest_api.integration.execution_arn,
+      aws_api_gateway_resource.snowflake[0].path
+    )
+  }
+}
+
 resource "aws_api_gateway_resource" "snowflake" {
   count = var.snowflake ? 1 : 0
 
@@ -71,5 +85,37 @@ resource "aws_api_gateway_integration_response" "snowflake_ingest" {
   depends_on = [
     aws_api_gateway_integration.snowflake_ingest[0],
     aws_api_gateway_method_response.snowflake_ingest_post[0],
+  ]
+}
+
+
+resource "aws_api_gateway_method_response" "snowflake_ingest_post_500" {
+  count = var.snowflake ? 1 : 0
+
+  http_method     = "POST"
+  resource_id     = aws_api_gateway_resource.snowflake_ingest[0].id
+  rest_api_id     = aws_api_gateway_rest_api.integration.id
+  status_code     = "500"
+  response_models = {
+    "application/json" : "Error"
+  }
+
+  depends_on = [
+    aws_api_gateway_method.snowflake_ingest_post
+  ]
+}
+
+resource "aws_api_gateway_integration_response" "snowflake_ingest_500" {
+  count = var.snowflake ? 1 : 0
+
+  http_method = aws_api_gateway_method.snowflake_ingest_post[0].http_method
+  resource_id = aws_api_gateway_resource.snowflake_ingest[0].id
+  rest_api_id = aws_api_gateway_rest_api.integration.id
+  selection_pattern = ".+"
+  status_code = "500"
+
+  depends_on = [
+    aws_api_gateway_integration.snowflake_ingest[0],
+    aws_api_gateway_method_response.snowflake_ingest_post_500[0],
   ]
 }
