@@ -23,8 +23,10 @@ resource "aws_api_gateway_deployment" "default" {
 
   depends_on = [
     // TODO: add all resources of the same type
+    aws_api_gateway_rest_api_policy.default,
     aws_api_gateway_integration_response.snowflake_ingest,
-    aws_api_gateway_rest_api_policy.default
+    aws_api_gateway_integration_response.snowflake_ingest_422,
+    aws_api_gateway_integration_response.snowflake_ingest_500,
   ]
 }
 

@@ -73,7 +73,6 @@ EOF
   }
 }
 
-// TODO: add response mapping
 resource "aws_api_gateway_integration_response" "snowflake_ingest" {
   count = var.snowflake ? 1 : 0
 
@@ -87,7 +86,6 @@ resource "aws_api_gateway_integration_response" "snowflake_ingest" {
     aws_api_gateway_method_response.snowflake_ingest_post[0],
   ]
 }
-
 
 resource "aws_api_gateway_method_response" "snowflake_ingest_post_500" {
   count = var.snowflake ? 1 : 0
@@ -111,11 +109,42 @@ resource "aws_api_gateway_integration_response" "snowflake_ingest_500" {
   http_method = aws_api_gateway_method.snowflake_ingest_post[0].http_method
   resource_id = aws_api_gateway_resource.snowflake_ingest[0].id
   rest_api_id = aws_api_gateway_rest_api.integration.id
-  selection_pattern = ".+"
+  selection_pattern = "internal error"
   status_code = "500"
 
   depends_on = [
     aws_api_gateway_integration.snowflake_ingest[0],
     aws_api_gateway_method_response.snowflake_ingest_post_500[0],
+  ]
+}
+
+resource "aws_api_gateway_method_response" "snowflake_ingest_post_422" {
+  count = var.snowflake ? 1 : 0
+
+  http_method     = "POST"
+  resource_id     = aws_api_gateway_resource.snowflake_ingest[0].id
+  rest_api_id     = aws_api_gateway_rest_api.integration.id
+  status_code     = "422"
+  response_models = {
+    "application/json" : "Error"
+  }
+
+  depends_on = [
+    aws_api_gateway_method.snowflake_ingest_post
+  ]
+}
+
+resource "aws_api_gateway_integration_response" "snowflake_ingest_422" {
+  count = var.snowflake ? 1 : 0
+
+  http_method = aws_api_gateway_method.snowflake_ingest_post[0].http_method
+  resource_id = aws_api_gateway_resource.snowflake_ingest[0].id
+  rest_api_id = aws_api_gateway_rest_api.integration.id
+  selection_pattern = "^(?!internal error$).+$"
+  status_code = "422"
+
+  depends_on = [
+    aws_api_gateway_integration.snowflake_ingest[0],
+    aws_api_gateway_method_response.snowflake_ingest_post_422[0],
   ]
 }
