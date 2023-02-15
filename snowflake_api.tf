@@ -10,6 +10,14 @@ locals {
       aws_api_gateway_resource.snowflake[0].path
     )
   }
+
+  snowflake_sub_paths = !var.snowflake ? {} : {
+    ingest : module.lambda_snowflake_ingest[0].lambda_function_invoke_arn
+    entity-by-id : module.lambda_snowflake_query[0].lambda_function_invoke_arn
+    entity-by-record-id : module.lambda_snowflake_query[0].lambda_function_invoke_arn
+    entity-id-by-record-id : module.lambda_snowflake_query[0].lambda_function_invoke_arn
+    match : module.lambda_snowflake_query[0].lambda_function_invoke_arn
+  }
 }
 
 resource "aws_api_gateway_resource" "snowflake" {
@@ -20,28 +28,28 @@ resource "aws_api_gateway_resource" "snowflake" {
   path_part   = "snowflake"
 }
 
-resource "aws_api_gateway_resource" "snowflake_ingest" {
-  count = var.snowflake ? 1 : 0
+resource "aws_api_gateway_resource" "snowflake_sub_path" {
+  for_each = local.snowflake_sub_paths
 
   rest_api_id = aws_api_gateway_rest_api.integration.id
   parent_id   = aws_api_gateway_resource.snowflake[0].id
-  path_part   = "ingest"
+  path_part   = each.key
 }
 
-resource "aws_api_gateway_method" "snowflake_ingest_post" {
-  count = var.snowflake ? 1 : 0
+resource "aws_api_gateway_method" "snowflake_sub_path_post" {
+  for_each = local.snowflake_sub_paths
 
   authorization = "AWS_IAM"
   http_method   = "POST"
-  resource_id   = aws_api_gateway_resource.snowflake_ingest[0].id
+  resource_id   = aws_api_gateway_resource.snowflake_sub_path[each.key].id
   rest_api_id   = aws_api_gateway_rest_api.integration.id
 }
 
-resource "aws_api_gateway_method_response" "snowflake_ingest_post" {
-  count = var.snowflake ? 1 : 0
+resource "aws_api_gateway_method_response" "snowflake_sub_path_post" {
+  for_each = local.snowflake_sub_paths
 
   http_method     = "POST"
-  resource_id     = aws_api_gateway_resource.snowflake_ingest[0].id
+  resource_id     = aws_api_gateway_resource.snowflake_sub_path[each.key].id
   rest_api_id     = aws_api_gateway_rest_api.integration.id
   status_code     = "200"
   response_models = {
@@ -49,19 +57,19 @@ resource "aws_api_gateway_method_response" "snowflake_ingest_post" {
   }
 
   depends_on = [
-    aws_api_gateway_method.snowflake_ingest_post
+    aws_api_gateway_method.snowflake_sub_path_post
   ]
 }
 
-resource "aws_api_gateway_integration" "snowflake_ingest" {
-  count = var.snowflake ? 1 : 0
+resource "aws_api_gateway_integration" "snowflake_sub_path" {
+  for_each = local.snowflake_sub_paths
 
-  http_method             = aws_api_gateway_method.snowflake_ingest_post[0].http_method
-  resource_id             = aws_api_gateway_resource.snowflake_ingest[0].id
+  http_method             = aws_api_gateway_method.snowflake_sub_path_post[each.key].http_method
+  resource_id             = aws_api_gateway_resource.snowflake_sub_path[each.key].id
   rest_api_id             = aws_api_gateway_rest_api.integration.id
   type                    = "AWS"
   integration_http_method = "POST"
-  uri                     = module.lambda_snowflake_ingest[0].lambda_function_invoke_arn
+  uri                     = each.value
 
   request_templates = {
     "application/json" = <<EOF
@@ -73,25 +81,25 @@ EOF
   }
 }
 
-resource "aws_api_gateway_integration_response" "snowflake_ingest" {
-  count = var.snowflake ? 1 : 0
+resource "aws_api_gateway_integration_response" "snowflake_sub_path" {
+  for_each = local.snowflake_sub_paths
 
-  http_method = aws_api_gateway_method.snowflake_ingest_post[0].http_method
-  resource_id = aws_api_gateway_resource.snowflake_ingest[0].id
+  http_method = aws_api_gateway_method.snowflake_sub_path_post[each.key].http_method
+  resource_id = aws_api_gateway_resource.snowflake_sub_path[each.key].id
   rest_api_id = aws_api_gateway_rest_api.integration.id
   status_code = "200"
 
   depends_on = [
-    aws_api_gateway_integration.snowflake_ingest[0],
-    aws_api_gateway_method_response.snowflake_ingest_post[0],
+    aws_api_gateway_integration.snowflake_sub_path,
+    aws_api_gateway_method_response.snowflake_sub_path_post,
   ]
 }
 
-resource "aws_api_gateway_method_response" "snowflake_ingest_post_500" {
-  count = var.snowflake ? 1 : 0
+resource "aws_api_gateway_method_response" "snowflake_sub_path_post_500" {
+  for_each = local.snowflake_sub_paths
 
   http_method     = "POST"
-  resource_id     = aws_api_gateway_resource.snowflake_ingest[0].id
+  resource_id     = aws_api_gateway_resource.snowflake_sub_path[each.key].id
   rest_api_id     = aws_api_gateway_rest_api.integration.id
   status_code     = "500"
   response_models = {
@@ -99,30 +107,30 @@ resource "aws_api_gateway_method_response" "snowflake_ingest_post_500" {
   }
 
   depends_on = [
-    aws_api_gateway_method.snowflake_ingest_post
+    aws_api_gateway_method.snowflake_sub_path_post
   ]
 }
 
-resource "aws_api_gateway_integration_response" "snowflake_ingest_500" {
-  count = var.snowflake ? 1 : 0
+resource "aws_api_gateway_integration_response" "snowflake_sub_path_500" {
+  for_each = local.snowflake_sub_paths
 
-  http_method = aws_api_gateway_method.snowflake_ingest_post[0].http_method
-  resource_id = aws_api_gateway_resource.snowflake_ingest[0].id
-  rest_api_id = aws_api_gateway_rest_api.integration.id
+  http_method       = aws_api_gateway_method.snowflake_sub_path_post[each.key].http_method
+  resource_id       = aws_api_gateway_resource.snowflake_sub_path[each.key].id
+  rest_api_id       = aws_api_gateway_rest_api.integration.id
   selection_pattern = "internal error"
-  status_code = "500"
+  status_code       = "500"
 
   depends_on = [
-    aws_api_gateway_integration.snowflake_ingest[0],
-    aws_api_gateway_method_response.snowflake_ingest_post_500[0],
+    aws_api_gateway_integration.snowflake_sub_path,
+    aws_api_gateway_method_response.snowflake_sub_path_post_500,
   ]
 }
 
-resource "aws_api_gateway_method_response" "snowflake_ingest_post_422" {
-  count = var.snowflake ? 1 : 0
+resource "aws_api_gateway_method_response" "snowflake_sub_path_post_422" {
+  for_each = local.snowflake_sub_paths
 
   http_method     = "POST"
-  resource_id     = aws_api_gateway_resource.snowflake_ingest[0].id
+  resource_id     = aws_api_gateway_resource.snowflake_sub_path[each.key].id
   rest_api_id     = aws_api_gateway_rest_api.integration.id
   status_code     = "422"
   response_models = {
@@ -130,21 +138,21 @@ resource "aws_api_gateway_method_response" "snowflake_ingest_post_422" {
   }
 
   depends_on = [
-    aws_api_gateway_method.snowflake_ingest_post
+    aws_api_gateway_method.snowflake_sub_path_post
   ]
 }
 
-resource "aws_api_gateway_integration_response" "snowflake_ingest_422" {
-  count = var.snowflake ? 1 : 0
+resource "aws_api_gateway_integration_response" "snowflake_sub_path_422" {
+  for_each = local.snowflake_sub_paths
 
-  http_method = aws_api_gateway_method.snowflake_ingest_post[0].http_method
-  resource_id = aws_api_gateway_resource.snowflake_ingest[0].id
-  rest_api_id = aws_api_gateway_rest_api.integration.id
+  http_method       = aws_api_gateway_method.snowflake_sub_path_post[each.key].http_method
+  resource_id       = aws_api_gateway_resource.snowflake_sub_path[each.key].id
+  rest_api_id       = aws_api_gateway_rest_api.integration.id
   selection_pattern = "^(?!internal error$).+$"
-  status_code = "422"
+  status_code       = "422"
 
   depends_on = [
-    aws_api_gateway_integration.snowflake_ingest[0],
-    aws_api_gateway_method_response.snowflake_ingest_post_422[0],
+    aws_api_gateway_integration.snowflake_sub_path,
+    aws_api_gateway_method_response.snowflake_sub_path_post_422,
   ]
 }

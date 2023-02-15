@@ -66,9 +66,9 @@ module "lambda_snowflake_ingest" {
   create_package = false
 
   s3_existing_package = {
-    bucket     = data.aws_s3_object.snowflake_ingest_artifact.bucket
-    key        = data.aws_s3_object.snowflake_ingest_artifact.key
-    version_id = data.aws_s3_object.snowflake_ingest_artifact.version_id
+    bucket     = data.aws_s3_object.snowflake_ingest_artifact[0].bucket
+    key        = data.aws_s3_object.snowflake_ingest_artifact[0].key
+    version_id = data.aws_s3_object.snowflake_ingest_artifact[0].version_id
   }
 
   layers = [
@@ -86,10 +86,55 @@ module "lambda_snowflake_ingest" {
   allowed_triggers = {
     APIGateway = {
       service    = "apigateway"
-      source_arn = format("%s/%s/POST%s",
+      source_arn = format("%s/%s/POST%s/*",
         aws_api_gateway_rest_api.integration.execution_arn,
         aws_api_gateway_stage.default.stage_name,
-        aws_api_gateway_resource.snowflake_ingest[0].path
+        aws_api_gateway_resource.snowflake[0].path
+      )
+    }
+  }
+  create_current_version_allowed_triggers = false
+}
+
+module "lambda_snowflake_query" {
+  count   = var.snowflake ? 1 : 0
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "~> 4.9"
+
+  function_name = format("%s-snowflake-query", local.prefix)
+  handler       = "query"
+  runtime       = "provided.al2"
+  timeout       = 900
+  memory_size   = 1024
+  architectures = ["arm64"]
+
+  create_package = false
+
+  s3_existing_package = {
+    bucket     = data.aws_s3_object.snowflake_query_artifact[0].bucket
+    key        = data.aws_s3_object.snowflake_query_artifact[0].key
+    version_id = data.aws_s3_object.snowflake_query_artifact[0].version_id
+  }
+
+  layers = [
+    var.core_config_layer_arn,
+  ]
+
+  environment_variables = var.core_environment_variables
+
+  attach_policies = true
+  policies        = [
+    var.core_policy_arn
+  ]
+  number_of_policies = 1
+
+  allowed_triggers = {
+    APIGateway = {
+      service    = "apigateway"
+      source_arn = format("%s/%s/POST%s/*",
+        aws_api_gateway_rest_api.integration.execution_arn,
+        aws_api_gateway_stage.default.stage_name,
+        aws_api_gateway_resource.snowflake[0].path
       )
     }
   }
