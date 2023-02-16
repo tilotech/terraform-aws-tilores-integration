@@ -1,6 +1,6 @@
-output "snowflake_api_url" {
+output "api_url" {
   value       = var.snowflake ? aws_api_gateway_stage.default.invoke_url : ""
-  description = "The Snowflake integration API URL"
+  description = "The integration API URL"
 }
 
 output "snowflake_api_access_role_arn" {
