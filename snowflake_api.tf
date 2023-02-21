@@ -16,6 +16,7 @@ locals {
     entity-by-id : module.lambda_snowflake_query[0].lambda_function_invoke_arn
     entity-by-record-id : module.lambda_snowflake_query[0].lambda_function_invoke_arn
     entity-id-by-record-id : module.lambda_snowflake_query[0].lambda_function_invoke_arn
+    search : module.lambda_snowflake_query[0].lambda_function_invoke_arn
     match : module.lambda_snowflake_query[0].lambda_function_invoke_arn
   }
 }

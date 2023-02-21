@@ -59,3 +59,75 @@ resource "aws_api_gateway_rest_api_policy" "default" {
     aws_iam_role.snowflake_api_access_external[0]
   ]
 }
+
+// TODO: Add any new mutation lambdas as a condition in count
+module "lambda_scavenger" {
+  count   = var.snowflake ? 1 : 0
+  source  = "terraform-aws-modules/lambda/aws"
+  version = "~> 4.9"
+
+  function_name = format("%s-integration-scavenger", local.prefix)
+  handler       = "scavenger"
+  runtime       = "provided.al2"
+  timeout       = 900
+  memory_size   = 1024
+  architectures = ["arm64"]
+
+  create_package = false
+
+  s3_existing_package = {
+    bucket     = data.aws_s3_object.scavenger_artifact.bucket
+    key        = data.aws_s3_object.scavenger_artifact.key
+    version_id = data.aws_s3_object.scavenger_artifact.version_id
+  }
+
+  environment_variables = {
+    DEAD_LETTER_QUEUE_URL = var.core_scavenger_dead_letter_queue_id
+  }
+
+  allowed_triggers = {
+    snowflake_ingest = {
+      principal  = format("logs.%s.amazonaws.com", data.aws_region.current.id)
+      source_arn = format("%s:*", module.lambda_snowflake_ingest[0].lambda_cloudwatch_log_group_arn)
+    }
+  }
+
+  create_current_version_allowed_triggers = false
+
+  attach_policy_statements = true
+  policy_statements        = {
+    s3 = {
+      effect  = "Allow"
+      actions = [
+        "s3:DeleteObject"
+      ]
+      resources = [
+        format("%s/*", var.core_entity_bucket_arn),
+        format("%s/*", var.core_execution_plan_bucket_arn)
+      ]
+    },
+    sqs = {
+      effect    = "Allow"
+      actions   = ["sqs:SendMessage"]
+      resources = [var.core_scavenger_dead_letter_queue_arn]
+    }
+    cloudwatch = {
+      effect  = "Allow"
+      actions = [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ]
+      resources = [
+        "arn:aws:logs:${data.aws_region.current.id}:*:log-group:/aws/lambda/${local.prefix}-integration-scavenger"
+      ]
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "scavenger_snowflake_ingest" {
+  count           = var.snowflake? 1 : 0
+  destination_arn = module.lambda_scavenger[0].lambda_function_arn
+  filter_pattern  = "\"REMOVE-GARBAGE\""
+  log_group_name  = module.lambda_snowflake_ingest[0].lambda_cloudwatch_log_group_name
+  name            = format("%s-%s", local.prefix, "scavenger-snowflake-ingest")
+}

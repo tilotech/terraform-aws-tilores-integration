@@ -8,6 +8,26 @@ variable "core_config_layer_arn" {
   description = "The configuration lambda layer ARN."
 }
 
+variable "core_entity_bucket_arn" {
+  type        = string
+  description = "The ARN of the bucket holding the entities in core"
+}
+
+variable "core_execution_plan_bucket_arn" {
+  type        = string
+  description = "The ARN of the bucket holding the execution plans in core"
+}
+
+variable "core_scavenger_dead_letter_queue_arn" {
+  type        = string
+  description = "The ARN of the scavenger dead letter queue in core"
+}
+
+variable "core_scavenger_dead_letter_queue_id" {
+  type        = string
+  description = "The ID of the scavenger dead letter queue in core"
+}
+
 variable "core_environment_variables" {
   type        = map(string)
   description = "The core lambda environment variables"
@@ -21,6 +41,12 @@ variable "core_policy_arn" {
 variable "core_version" {
   type        = string
   description = "The version of tilores core, e.g. v0-1-0 , v0 or latest"
+  default     = "v0"
+}
+
+variable "scavenger_version" {
+  description = "The version of scavenger, e.g. v0-1-0 , v0 or latest"
+  type        = string
   default     = "v0"
 }
 
