@@ -104,7 +104,7 @@ module "lambda_snowflake_query" {
   function_name = format("%s-snowflake-query", local.prefix)
   handler       = "query"
   runtime       = "provided.al2"
-  timeout       = 900
+  timeout       = 30
   memory_size   = 1024
   architectures = ["arm64"]
 

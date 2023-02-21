@@ -55,6 +55,17 @@ resource "aws_api_gateway_rest_api_policy" "default" {
   })
 
   depends_on = [
+    time_sleep.wait_for_role
+  ]
+}
+
+resource "time_sleep" "wait_for_role" {
+  triggers = {
+    roleChange = sha1(jsonencode(local.api_policy_statements))
+  }
+  create_duration = "10s"
+
+  depends_on = [
     aws_iam_role.snowflake_api_access[0],
     aws_iam_role.snowflake_api_access_external[0]
   ]
