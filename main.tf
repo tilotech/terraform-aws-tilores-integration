@@ -75,7 +75,7 @@ resource "time_sleep" "wait_for_role" {
 module "lambda_scavenger" {
   count   = var.snowflake ? 1 : 0
   source  = "terraform-aws-modules/lambda/aws"
-  version = "~> 4.9"
+  version = "= 4.11"
 
   function_name = format("%s-integration-scavenger", local.prefix)
   handler       = "scavenger"

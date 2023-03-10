@@ -54,7 +54,7 @@ resource "aws_iam_role" "snowflake_api_access_external" {
 module "lambda_snowflake_ingest" {
   count   = var.snowflake ? 1 : 0
   source  = "terraform-aws-modules/lambda/aws"
-  version = "~> 4.9"
+  version = "= 4.11"
 
   function_name = format("%s-snowflake-ingest", local.prefix)
   handler       = "ingest"
@@ -99,7 +99,7 @@ module "lambda_snowflake_ingest" {
 module "lambda_snowflake_query" {
   count   = var.snowflake ? 1 : 0
   source  = "terraform-aws-modules/lambda/aws"
-  version = "~> 4.9"
+  version = "= 4.11"
 
   function_name = format("%s-snowflake-query", local.prefix)
   handler       = "query"
