@@ -68,6 +68,12 @@ variable "snowflake_external_id" {
   default     = ""
 }
 
+variable "snowflake_ingest_concurrency" {
+  type = number
+  description = "Defines the maximum concurrent ingestion, -1 for unlimited"
+  default = -1
+}
+
 locals {
   prefix           = format("%s-tilores", var.resource_prefix)
   artifacts_bucket = format("tilotech-artifacts-%s", data.aws_region.current.id)

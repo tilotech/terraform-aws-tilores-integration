@@ -65,6 +65,8 @@ module "lambda_snowflake_ingest" {
 
   create_package = false
 
+  reserved_concurrent_executions = var.snowflake_ingest_concurrency
+
   s3_existing_package = {
     bucket     = data.aws_s3_object.snowflake_ingest_artifact[0].bucket
     key        = data.aws_s3_object.snowflake_ingest_artifact[0].key
