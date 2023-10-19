@@ -69,9 +69,33 @@ variable "snowflake_external_id" {
 }
 
 variable "snowflake_ingest_concurrency" {
-  type = number
+  type        = number
   description = "Defines the maximum concurrent ingestion, -1 for unlimited"
-  default = -1
+  default     = -1
+}
+
+variable "webhook" {
+  type        = bool
+  description = "Defines whether to create webhook integration resources"
+  default     = false
+}
+
+variable "webhook_entity_stream_parallelization_sqs" {
+  type        = number
+  description = "This value configures how many lambda consumers are listening on sqs entity stream queue. (Between 2 and 1000, default is 10, 0 if source is kinesis)"
+  default     = 10
+}
+
+variable "webhook_entity_stream_url" {
+  type        = string
+  description = "The entity stream webhook URL"
+  default     = ""
+}
+
+variable "webhook_entity_stream_arn" {
+  type        = string
+  description = "The entity stream ARN, could be SQS or Kinesis"
+  default     = ""
 }
 
 locals {
