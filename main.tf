@@ -41,7 +41,7 @@ locals {
   api_policy_statements = [
     for statement in [
       local.snowflake_api_policy_statement
-    ] : statement if statement!=null
+    ] : statement if statement != null
   ]
 }
 
@@ -75,7 +75,7 @@ resource "time_sleep" "wait_for_role" {
 module "lambda_scavenger" {
   count   = var.snowflake ? 1 : 0
   source  = "terraform-aws-modules/lambda/aws"
-  version = "= 4.11"
+  version = "7.2.1"
 
   function_name = format("%s-integration-scavenger", local.prefix)
   handler       = "scavenger"
@@ -106,9 +106,9 @@ module "lambda_scavenger" {
   create_current_version_allowed_triggers = false
 
   attach_policy_statements = true
-  policy_statements        = {
+  policy_statements = {
     s3 = {
-      effect  = "Allow"
+      effect = "Allow"
       actions = [
         "s3:DeleteObject"
       ]
@@ -123,7 +123,7 @@ module "lambda_scavenger" {
       resources = [var.core_scavenger_dead_letter_queue_arn]
     }
     cloudwatch = {
-      effect  = "Allow"
+      effect = "Allow"
       actions = [
         "logs:CreateLogStream",
         "logs:PutLogEvents"
@@ -136,7 +136,7 @@ module "lambda_scavenger" {
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "scavenger_snowflake_ingest" {
-  count           = var.snowflake? 1 : 0
+  count           = var.snowflake ? 1 : 0
   destination_arn = module.lambda_scavenger[0].lambda_function_arn
   filter_pattern  = "\"REMOVE-GARBAGE\""
   log_group_name  = module.lambda_snowflake_ingest[0].lambda_cloudwatch_log_group_name

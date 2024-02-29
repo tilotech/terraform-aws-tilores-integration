@@ -3,14 +3,14 @@ locals {
 }
 
 resource "aws_iam_role" "snowflake_api_access" {
-  count              = var.snowflake && local.use_snowflake_internal_role ? 1 : 0
-  name               = format("%s-snowflake-api-access", local.prefix)
+  count = var.snowflake && local.use_snowflake_internal_role ? 1 : 0
+  name  = format("%s-snowflake-api-access", local.prefix)
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
         Principal = {
           AWS = var.snowflake_iam_user_arn
         }
@@ -26,14 +26,14 @@ resource "aws_iam_role" "snowflake_api_access" {
 
 // Root user is always disabled, and cannot have a principal arn "never"
 resource "aws_iam_role" "snowflake_api_access_external" {
-  count              = !var.snowflake ? 0 : (local.use_snowflake_internal_role ? 0 : 1)
-  name               = format("%s-snowflake-api-access-external", local.prefix)
+  count = !var.snowflake ? 0 : (local.use_snowflake_internal_role ? 0 : 1)
+  name  = format("%s-snowflake-api-access-external", local.prefix)
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17"
+    Version = "2012-10-17"
     Statement = [
       {
-        Action    = "sts:AssumeRole"
-        Effect    = "Allow"
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
         Principal = {
           AWS = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"
         }
@@ -54,7 +54,7 @@ resource "aws_iam_role" "snowflake_api_access_external" {
 module "lambda_snowflake_ingest" {
   count   = var.snowflake ? 1 : 0
   source  = "terraform-aws-modules/lambda/aws"
-  version = "= 4.11"
+  version = "7.2.1"
 
   function_name = format("%s-snowflake-ingest", local.prefix)
   handler       = "ingest"
@@ -80,14 +80,14 @@ module "lambda_snowflake_ingest" {
   environment_variables = var.core_environment_variables
 
   attach_policies = true
-  policies        = [
+  policies = [
     var.core_policy_arn
   ]
   number_of_policies = 1
 
   allowed_triggers = {
     APIGateway = {
-      service    = "apigateway"
+      service = "apigateway"
       source_arn = format("%s/%s/POST%s/*",
         aws_api_gateway_rest_api.integration.execution_arn,
         aws_api_gateway_stage.default.stage_name,
@@ -101,7 +101,7 @@ module "lambda_snowflake_ingest" {
 module "lambda_snowflake_query" {
   count   = var.snowflake ? 1 : 0
   source  = "terraform-aws-modules/lambda/aws"
-  version = "= 4.11"
+  version = "7.2.1"
 
   function_name = format("%s-snowflake-query", local.prefix)
   handler       = "query"
@@ -125,14 +125,14 @@ module "lambda_snowflake_query" {
   environment_variables = var.core_environment_variables
 
   attach_policies = true
-  policies        = [
+  policies = [
     var.core_policy_arn
   ]
   number_of_policies = 1
 
   allowed_triggers = {
     APIGateway = {
-      service    = "apigateway"
+      service = "apigateway"
       source_arn = format("%s/%s/POST%s/*",
         aws_api_gateway_rest_api.integration.execution_arn,
         aws_api_gateway_stage.default.stage_name,

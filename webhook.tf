@@ -1,12 +1,12 @@
 locals {
-  webhook_entity_stream_use_sqs = var.webhook && var.webhook_entity_stream_parallelization_sqs != 0
+  webhook_entity_stream_use_sqs     = var.webhook && var.webhook_entity_stream_parallelization_sqs != 0
   webhook_entity_stream_use_kinesis = var.webhook && var.webhook_entity_stream_parallelization_sqs == 0
 
   all_entity_stream_event_source_mapping = {
     sqs = local.webhook_entity_stream_use_sqs ? {
       event_source_arn = var.webhook_entity_stream_arn
       batch_size       = 10
-      scaling_config   = {
+      scaling_config = {
         maximum_concurrency = var.webhook_entity_stream_parallelization_sqs
       }
       function_response_types = ["ReportBatchItemFailures"]
@@ -25,11 +25,10 @@ locals {
   }
 }
 
-
 module "lambda_webhook_entity_stream" {
   count   = var.webhook ? 1 : 0
   source  = "terraform-aws-modules/lambda/aws"
-  version = "~> 6.0"
+  version = "7.2.1"
 
   function_name = format("%s-webhook-entity-stream", local.prefix)
   handler       = "entitystream"
@@ -51,7 +50,7 @@ module "lambda_webhook_entity_stream" {
   }
 
   attach_policies = true
-  policies        = [
+  policies = [
     aws_iam_policy.lambda_webhook_entity_stream[0].arn
   ]
   number_of_policies = 1
@@ -69,7 +68,7 @@ resource "aws_iam_policy" "lambda_webhook_entity_stream" {
 
 data "aws_iam_policy_document" "lambda_webhook_entity_stream" {
   statement {
-    effect  = "Allow"
+    effect = "Allow"
     actions = [
       "kinesis:GetShardIterator",
       "kinesis:DescribeStream",
@@ -84,14 +83,14 @@ data "aws_iam_policy_document" "lambda_webhook_entity_stream" {
     resources = [var.webhook_entity_stream_arn]
   }
   statement {
-    effect  = "Allow"
+    effect = "Allow"
     actions = [
       "kinesis:ListStreams"
     ]
     resources = ["*"]
   }
   statement {
-    effect  = "Allow"
+    effect = "Allow"
     actions = [
       "logs:CreateLogStream",
       "logs:PutLogEvents"
