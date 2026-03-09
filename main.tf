@@ -79,7 +79,7 @@ module "lambda_scavenger" {
 
   function_name = format("%s-integration-scavenger", local.prefix)
   handler       = "scavenger"
-  runtime       = "provided.al2"
+  runtime       = "provided.al2023"
   timeout       = 900
   memory_size   = 1024
   architectures = ["arm64"]
