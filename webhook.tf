@@ -32,7 +32,7 @@ module "lambda_webhook_entity_stream" {
 
   function_name = format("%s-webhook-entity-stream", local.prefix)
   handler       = "entitystream"
-  runtime       = "provided.al2"
+  runtime       = "provided.al2023"
   timeout       = 60
   memory_size   = 1024
   architectures = ["arm64"]

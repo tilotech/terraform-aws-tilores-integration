@@ -58,7 +58,7 @@ module "lambda_snowflake_ingest" {
 
   function_name = format("%s-snowflake-ingest", local.prefix)
   handler       = "ingest"
-  runtime       = "provided.al2"
+  runtime       = "provided.al2023"
   timeout       = 900
   memory_size   = 1024
   architectures = ["arm64"]
@@ -105,7 +105,7 @@ module "lambda_snowflake_query" {
 
   function_name = format("%s-snowflake-query", local.prefix)
   handler       = "query"
-  runtime       = "provided.al2"
+  runtime       = "provided.al2023"
   timeout       = 30
   memory_size   = 1024
   architectures = ["arm64"]
