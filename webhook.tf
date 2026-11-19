@@ -95,6 +95,6 @@ data "aws_iam_policy_document" "lambda_webhook_entity_stream" {
       "logs:CreateLogStream",
       "logs:PutLogEvents"
     ]
-    resources = ["arn:aws:logs:${data.aws_region.current.id}:*:log-group:/aws/lambda/${local.prefix}-*"]
+    resources = ["arn:aws:logs:${data.aws_region.current.region}:*:log-group:/aws/lambda/${local.prefix}-*"]
   }
 }
