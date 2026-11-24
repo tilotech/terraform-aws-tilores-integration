@@ -100,5 +100,5 @@ variable "webhook_entity_stream_arn" {
 
 locals {
   prefix           = format("%s-tilores", var.resource_prefix)
-  artifacts_bucket = format("tilotech-artifacts-%s", data.aws_region.current.id)
+  artifacts_bucket = format("tilotech-artifacts-%s", data.aws_region.current.region)
 }

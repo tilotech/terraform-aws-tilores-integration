@@ -98,7 +98,7 @@ module "lambda_scavenger" {
 
   allowed_triggers = {
     snowflake_ingest = {
-      principal  = format("logs.%s.amazonaws.com", data.aws_region.current.id)
+      principal  = format("logs.%s.amazonaws.com", data.aws_region.current.region)
       source_arn = format("%s:*", module.lambda_snowflake_ingest[0].lambda_cloudwatch_log_group_arn)
     }
   }
@@ -129,7 +129,7 @@ module "lambda_scavenger" {
         "logs:PutLogEvents"
       ]
       resources = [
-        "arn:aws:logs:${data.aws_region.current.id}:*:log-group:/aws/lambda/${local.prefix}-integration-scavenger"
+        "arn:aws:logs:${data.aws_region.current.region}:*:log-group:/aws/lambda/${local.prefix}-integration-scavenger"
       ]
     }
   }
