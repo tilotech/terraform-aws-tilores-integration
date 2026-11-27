@@ -1,10 +1,10 @@
 locals {
   snowflake_api_policy_statement = !var.snowflake ? null : {
-    Effect    = "Allow"
+    Effect = "Allow"
     Principal = {
       AWS = "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/${local.use_snowflake_internal_role ? aws_iam_role.snowflake_api_access[0].name : aws_iam_role.snowflake_api_access_external[0].name}/snowflake"
     },
-    Action   = "execute-api:Invoke",
+    Action = "execute-api:Invoke",
     Resource = format("%s/default/POST%s/*",
       aws_api_gateway_rest_api.integration.execution_arn,
       aws_api_gateway_resource.snowflake[0].path
@@ -49,10 +49,10 @@ resource "aws_api_gateway_method" "snowflake_sub_path_post" {
 resource "aws_api_gateway_method_response" "snowflake_sub_path_post" {
   for_each = local.snowflake_sub_paths
 
-  http_method     = "POST"
-  resource_id     = aws_api_gateway_resource.snowflake_sub_path[each.key].id
-  rest_api_id     = aws_api_gateway_rest_api.integration.id
-  status_code     = "200"
+  http_method = "POST"
+  resource_id = aws_api_gateway_resource.snowflake_sub_path[each.key].id
+  rest_api_id = aws_api_gateway_rest_api.integration.id
+  status_code = "200"
   response_models = {
     "application/json" : "Empty"
   }
@@ -99,10 +99,10 @@ resource "aws_api_gateway_integration_response" "snowflake_sub_path" {
 resource "aws_api_gateway_method_response" "snowflake_sub_path_post_500" {
   for_each = local.snowflake_sub_paths
 
-  http_method     = "POST"
-  resource_id     = aws_api_gateway_resource.snowflake_sub_path[each.key].id
-  rest_api_id     = aws_api_gateway_rest_api.integration.id
-  status_code     = "500"
+  http_method = "POST"
+  resource_id = aws_api_gateway_resource.snowflake_sub_path[each.key].id
+  rest_api_id = aws_api_gateway_rest_api.integration.id
+  status_code = "500"
   response_models = {
     "application/json" : "Error"
   }
@@ -130,10 +130,10 @@ resource "aws_api_gateway_integration_response" "snowflake_sub_path_500" {
 resource "aws_api_gateway_method_response" "snowflake_sub_path_post_422" {
   for_each = local.snowflake_sub_paths
 
-  http_method     = "POST"
-  resource_id     = aws_api_gateway_resource.snowflake_sub_path[each.key].id
-  rest_api_id     = aws_api_gateway_rest_api.integration.id
-  status_code     = "422"
+  http_method = "POST"
+  resource_id = aws_api_gateway_resource.snowflake_sub_path[each.key].id
+  rest_api_id = aws_api_gateway_rest_api.integration.id
+  status_code = "422"
   response_models = {
     "application/json" : "Error"
   }
